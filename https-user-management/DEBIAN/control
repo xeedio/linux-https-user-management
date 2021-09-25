@@ -1,0 +1,7 @@
+Package: https-user-management
+Version: 1.0
+Priority: optional
+Architecture: amd64
+Depends: libc6, libpam0g
+Maintainer: Sean Williams <sean@xeed.io>
+Description: A set of PAM and NSS modules to manage remote users over HTTPS with mTLS.

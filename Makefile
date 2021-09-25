@@ -2,37 +2,50 @@
 
 TEST_USER := $(shell echo ${TEST_USER})
 
+PACKAGE_NAME = https-user-management
+PACKAGE_FILE := $(PACKAGE_NAME).deb
+
 INSTALL_TARGETS := \
 					/etc/pam.d/pam_https \
 					/lib/x86_64-linux-gnu/security/pam_https.so \
 					/lib/x86_64-linux-gnu/libnss_https.so.2
 
-default: integrate
+BUILD_TARGETS := $(PACKAGE_NAME)/lib/x86_64-linux-gnu/security/pam_https.so \
+				 $(PACKAGE_NAME)/lib/x86_64-linux-gnu/libnss_https.so.2
 
-clean:
-	@sudo rm -rf $(INSTALL_TARGETS)
+default: package
 
-FORCE:
+$(PACKAGE_FILE): $(BUILD_TARGETS) $(PACKAGE_NAME)/DEBIAN/control
+	@dpkg-deb -v --build --root-owner-group $(PACKAGE_NAME)
+	@echo >&2 "Package Info:"
+	@dpkg-deb -v --info $@
+	@echo >&2 "Package Contents:"
+	@dpkg-deb -v --contents $@
 
-modules/pam_https.so: $(wildcard pam-https/*.go)
+$(PACKAGE_NAME)/lib/x86_64-linux-gnu/security/pam_https.so: $(wildcard pam-https/*.go)
 	@mkdir -p $(@D)
 	@go build -buildmode=c-shared -o $@ $^
 
-modules/libnss_%.so.2: $(wildcard nss-https/*.go)
-	@CGO_CFLAGS="-g -O2 -D __LIB_NSS_NAME=$*" go build --buildmode=c-shared -o $@ $^
+$(PACKAGE_NAME)/lib/x86_64-linux-gnu/libnss_https.so.2: $(wildcard nss-https/*.go)
+	@mkdir -p $(@D)
+	@CGO_CFLAGS="-g -O2 -D __LIB_NSS_NAME=https" go build --buildmode=c-shared -o $@ $^
 
-/lib/x86_64-linux-gnu/%: modules/%
-	@sudo mv $< $@
-
-/lib/x86_64-linux-gnu/security/%.so: modules/%.so
-	@sudo mv $< $@
-
-/etc/pam.d/%: pam.d/%
+/lib/%: $(PACKAGE_NAME)/lib/%
 	@sudo cp $< $@
 
+/etc/pam.d/%: $(PACKAGE_NAME)/etc/pam.d/%
+	@sudo cp $< $@
+
+build: $(BUILD_TARGETS)
+
 install: $(INSTALL_TARGETS)
+
+package: $(PACKAGE_FILE)
 
 integrate: install
 	@sudo getent passwd $(TEST_USER)
 	@sudo getent shadow $(TEST_USER)
 	@sudo pamtester -v -I rhost=localhost pam_https $(TEST_USER) authenticate
+
+clean:
+	@rm -rf $(BUILD_TARGETS) $(PACKAGE_FILE)

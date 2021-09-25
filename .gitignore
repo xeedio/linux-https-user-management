@@ -1,5 +1,7 @@
 *.a
+*.deb
 *.so
+*.so.*
 .clangd/
 .vscode/
 build/

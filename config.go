@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const defaultConfigFilePath = "/etc/https-user-management/config.conf"
+const defaultConfigFilePath = "/etc/https-user-management/config.yaml"
 const defaultTokenFilePath = "/etc/https-user-management/user.token"
 
 type Config struct {

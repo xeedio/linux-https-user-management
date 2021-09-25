@@ -1,0 +1,39 @@
+---
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - uses: jiro4989/build-deb-action@v2
+        with:
+          package: 'https-user-management'
+          package_root: 'https-user-management'
+          maintainer: 'Sean Williams <sean@xeed.io>'
+          version: ${{ github.ref }}
+          arch: 'amd64'
+          depends: 'libc6, libpam0g'
+          desc: 'A set of PAM and NSS modules to manage remote users over HTTPS with mTLS.'
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifact-deb
+          path: |
+            ./*.deb

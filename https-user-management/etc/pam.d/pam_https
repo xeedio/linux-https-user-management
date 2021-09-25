@@ -1,4 +1,3 @@
 #%PAM-1.0
 # Custom HTTP auth
 auth          sufficient pam_https.so
-# logger=syslog

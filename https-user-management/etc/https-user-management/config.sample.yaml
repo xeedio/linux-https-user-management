@@ -1,0 +1,9 @@
+---
+debug: false
+logger: syslog
+tls:
+  key: /etc/https-user-management/ssl/client.key
+  cert: /etc/https-user-management/ssl/client.crt
+  ca: /etc/https-user-management/ssl/ca.crt
+tokenfile: /etc/https-user-management/user.token
+url: https://www.example.com/api-token-auth/
