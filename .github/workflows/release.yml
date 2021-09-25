@@ -1,5 +1,5 @@
 ---
-name: Release
+name: Release Package
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          fetch-depth: '0'  # All history
 
       - name: Configure Git
         run: |
@@ -24,37 +24,9 @@ jobs:
 
       - name: Build linux packages
         run: |
-          apt-get install libpam0g-dev
+          sudo apt-get install libpam0g-dev
           make package
-
-      - uses: jiro4989/build-deb-action@v2
-        with:
-          package: 'https-user-management'
-          package_root: 'https-user-management'
-          maintainer: 'Sean Williams <sean@xeed.io>'
-          version: ${{ github.ref }}
-          arch: 'amd64'
-          depends: 'libc6, libpam0g'
-          desc: 'A set of PAM and NSS modules to manage remote users over HTTPS with mTLS.'
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: artifact-deb
-          path: |
-            ./*.deb
-
-  create-release:
-    runs-on: ubuntu-latest
-    needs:
-      - build-linux-packages
-    steps:
-      - uses: actions/checkout@v1
-      - name: Generate changelog
-        run: |
-          wget https://github.com/git-chglog/git-chglog/releases/download/0.9.1/git-chglog_linux_amd64
-          chmod +x git-chglog_linux_amd64
-          mv git-chglog_linux_amd64 git-chglog
-          ./git-chglog --output ./changelog $(git describe --tags $(git rev-list --tags --max-count=1))
+          make changelog
 
       - name: Create Release
         id: create-release
@@ -70,23 +42,6 @@ jobs:
 
       - name: Write upload_url to file
         run: echo '${{ steps.create-release.outputs.upload_url }}' > upload_url.txt
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: create-release
-          path: upload_url.txt
-
-  upload-linux-packages:
-    runs-on: ubuntu-latest
-    needs: create-release
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: artifact-deb
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: create-release
 
       - id: vars
         run: |

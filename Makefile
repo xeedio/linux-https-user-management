@@ -18,7 +18,7 @@ INSTALL_TARGETS := \
 BUILD_TARGETS := $(PACKAGE_NAME)/lib/x86_64-linux-gnu/security/pam_https.so \
 				 $(PACKAGE_NAME)/lib/x86_64-linux-gnu/libnss_https.so.2
 
-include *.mk
+include templates.mk
 
 default: package
 
@@ -29,7 +29,7 @@ changelog:
 $(PACKAGE_CONTROL): templates/$(PACKAGE_CONTROL)
 	@: $(call render_template,$<,$@)
 
-$(PACKAGE_FILE): $(BUILD_TARGETS) $(PACKAGE_NAME)/DEBIAN/control
+$(PACKAGE_FILE): $(BUILD_TARGETS) $(PACKAGE_CONTROL)
 	@dpkg-deb -v --build --root-owner-group $(PACKAGE_NAME)
 	@echo >&2 "Package Info:"
 	@dpkg-deb -v --info $@

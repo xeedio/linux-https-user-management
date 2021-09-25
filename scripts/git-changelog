@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 if git describe --tags --exact-match --abbrev=0 &> /dev/null; then
   from_version=$(git describe --tags --exact-match --abbrev=0)
   from_version_label="$from_version"
