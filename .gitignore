@@ -2,7 +2,5 @@
 *.deb
 *.so
 *.so.*
-.clangd/
-.vscode/
-build/
-compile_commands.json
+changelog
+https-user-management/DEBIAN/control

@@ -1,5 +1,5 @@
-Package: https-user-management
-Version: 1.0
+Package: $(PACKAGE_NAME)
+Version: $(shell scripts/git-semver)
 Priority: optional
 Architecture: amd64
 Depends: libc6, libpam0g

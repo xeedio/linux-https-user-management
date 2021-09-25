@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if git describe --tags --exact-match --abbrev=0 2> /dev/null; then
+  semver=$(git describe --tags --exact-match --abbrev=0)
+else
+  semver=$(git describe --tags | grep -Eo 'v[0-9]*\.[0-9*]\.[0-9]*-?[0-9]*')
+fi
+
+version=$(echo "$semver" | sed -E 's/^v//')
+
+echo "$version"

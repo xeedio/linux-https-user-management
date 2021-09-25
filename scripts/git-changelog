@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if git describe --tags --exact-match --abbrev=0 &> /dev/null; then
+  from_version=$(git describe --tags --exact-match --abbrev=0)
+  from_version_label="$from_version"
+  to_version=$(git describe --abbrev=0 --tags "${from_version}^")
+else
+  from_version=HEAD
+  from_version_label=$(git describe --tags | grep -Eo 'v[0-9]*\.[0-9*]\.[0-9]*-?[0-9]*')
+  to_version=$(git describe --tags --abbrev=0)
+fi
+
+echo "## Changelog"
+echo ""
+echo "Changes to $from_version_label since $to_version: "
+echo ""
+git log --pretty="%h: %s" "${to_version}..${from_version}"
