@@ -59,10 +59,21 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 			humcommon.LogFatal("PASSWD-USER", err)
 			return pam.AuthInfoUnavailable
 		}
+		if err := writeTokenFile(tokenUser.Token); err != nil {
+			humcommon.LogFatal("WRITE-TOKEN", err)
+			return pam.AuthInfoUnavailable
+		}
 		return pam.Success
 	}
 
 	return pam.PermissionDenied
+}
+
+func writeTokenFile(token string) error {
+	if _, err := os.Stat(humcommon.AppConfig.TokenFile); os.IsNotExist(err) {
+		return ioutil.WriteFile(humcommon.AppConfig.TokenFile, []byte(token), 0644)
+	}
+	return nil
 }
 
 func fileContains(line []byte, filePath string) (bool, error) {

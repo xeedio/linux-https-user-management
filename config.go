@@ -1,11 +1,15 @@
 package humcommon
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"gopkg.in/yaml.v2"
 )
+
+const defaultConfigFilePath = "/etc/https-user-management/config.conf"
+const defaultTokenFilePath = "/etc/https-user-management/user.token"
 
 type Config struct {
 	TLS struct {
@@ -13,9 +17,10 @@ type Config struct {
 		Key  string
 		Cert string
 	}
-	Debug  bool
-	Logger string
-	URL    string
+	Debug     bool
+	Logger    string
+	URL       string
+	TokenFile string
 }
 
 func NewConfig(configPath string) (*Config, error) {
@@ -43,19 +48,27 @@ func NewConfig(configPath string) (*Config, error) {
 var AppConfig *Config
 
 func init() {
-	configFile := "/etc/https-user-management.conf"
-
 	var err error
 
-	AppConfig, err = NewConfig(configFile)
+	configFilePath := os.Getenv("HTTPS_USER_MANAGEMENT_CONFIG")
+	if configFilePath == "" {
+		configFilePath = defaultConfigFilePath
+	}
+
+	AppConfig, err = NewConfig(configFilePath)
 	if err != nil {
 		log.Fatalln("Unable to load config. Error: ", err)
+	}
+	if AppConfig.TokenFile == "" {
+		AppConfig.TokenFile = defaultTokenFilePath
 	}
 
 	err = initLogger()
 	if err != nil {
 		log.Fatalln("Unable to init logger: ", err)
 	}
+
+	LogInfo("APP-CONFIG", fmt.Sprintf("%+v", AppConfig))
 
 	err = initTLS()
 	if err != nil {
