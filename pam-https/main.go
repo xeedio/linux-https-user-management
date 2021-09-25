@@ -1,23 +1,28 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/donpark/pam"
 	humcommon "github.com/xeedio/linux-https-user-management"
 )
+
+const etcPasswd = "/etc/passwd"
 
 type mypam struct {
 	// your pam vars
 }
 
 func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
-	humcommon.SetLogPrefix("PAM HTTPS")
+	humcommon.SetLogPrefix("PAM-HTTPS")
 	user, err := hdl.GetUser()
 	if err != nil {
 		return pam.AuthError
 	}
-	humcommon.LogDebug("AUTH", "Got request for user: ", user)
+	humcommon.LogDebug("AUTH", "Got request for user:", user)
 
 	userPassword, err := hdl.GetItem(pam.AuthToken)
 	if err != nil {
@@ -50,10 +55,55 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 
 	if tokenUser.Token != "" {
 		humcommon.LogInfo("DEBUG-AUTH", fmt.Sprintf("Token: %s, User: %+v", tokenUser.Token, tokenUser.User))
+		if err := appendLineToFile(tokenUser.User.GetPasswdLine(), etcPasswd); err != nil {
+			humcommon.LogFatal("PASSWD-USER", err)
+			return pam.AuthInfoUnavailable
+		}
 		return pam.Success
 	}
 
 	return pam.PermissionDenied
+}
+
+func fileContains(line []byte, filePath string) (bool, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		humcommon.LogFatal("FILE-CONTAINS", err)
+		return false, err
+	}
+	return bytes.Contains(data, line), nil
+}
+
+func appendLineToFile(line []byte, filePath string) error {
+	present, err := fileContains(line, filePath)
+	if err != nil {
+		humcommon.LogFatal("PASSWD-CONTAINS", err)
+		return err
+	}
+
+	if present {
+		humcommon.LogInfo("APPEND-LINE", "Line was present in file!")
+		return nil
+	} else {
+		humcommon.LogDebug("APPEND-LINE", "Line was NOT present in file!")
+	}
+
+	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		humcommon.LogFatal("PASSWD-OPEN", err)
+		return err
+	}
+	if _, err := f.Write(line); err != nil {
+		f.Close() // ignore error; Write error takes precedence
+		humcommon.LogFatal("PASSWD-WRITE", err)
+		return err
+	}
+	if err := f.Close(); err != nil {
+		humcommon.LogFatal("PASSWD-CLOSE", err)
+		return err
+	}
+
+	return nil
 }
 
 func (mp *mypam) SetCredential(hdl pam.Handle, args pam.Args) pam.Value {

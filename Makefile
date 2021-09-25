@@ -34,4 +34,5 @@ install: $(INSTALL_TARGETS)
 
 integrate: install
 	@sudo getent passwd $(TEST_USER)
+	@sudo getent shadow $(TEST_USER)
 	@sudo pamtester -v -I rhost=localhost pam_https $(TEST_USER) authenticate
