@@ -24,6 +24,7 @@ jobs:
 
       - name: Build linux packages
         run: |
+          apt-get install libpam0g-dev
           make package
 
       - uses: jiro4989/build-deb-action@v2
