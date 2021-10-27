@@ -22,6 +22,9 @@ include templates.mk
 
 default: package
 
+dep:
+	sudo apt -y install libpam0g-dev pamtester
+
 .PHONY: changelog
 changelog:
 	@./scripts/git-changelog > $@
@@ -60,6 +63,9 @@ integrate: install
 	@sudo getent passwd $(TEST_USER)
 	@sudo getent shadow $(TEST_USER)
 	@sudo pamtester -v -I rhost=localhost pam_https $(TEST_USER) authenticate
+
+docker: package
+	docker build -t dockerpamtest .
 
 clean:
 	@rm -rf $(BUILD_TARGETS) $(PACKAGE_FILE) $(PACKAGE_CONTROL)
