@@ -20,7 +20,7 @@ type HTTPSRemoteUserImpl struct {
 
 // PasswdByName() returns a single entry by name.
 func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
-	humcommon.LogInfo("PASSWD-BY-NAME", name)
+	humcommon.Log().Infof("PasswordByName: %s", name)
 	entry := Passwd{
 		Username: name,
 		Password: "x",
@@ -35,7 +35,7 @@ func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 
 // PasswdByUid() returns a single entry by uid.
 func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
-	humcommon.LogInfo("PASSWD-BY-UID", uid)
+	humcommon.Log().Infof("PasswordByUid: %d", uid)
 	if uid == httpsRemoteUserID {
 		return StatusSuccess, defaultHttpsRemoteUser
 	}
@@ -43,7 +43,7 @@ func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 }
 
 func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
-	humcommon.LogInfo("SHADOW-BY-NAME", name)
+	humcommon.Log().Infof("ShadowByName: %s", name)
 	entry := Shadow{
 		Username:        name,
 		Password:        "!",
@@ -71,8 +71,6 @@ func init() {
 
 	// We set our implementation to "HTTPSRemoteUserImpl", so that go-libnss will use the methods we create
 	SetImpl(HTTPSRemoteUserImpl{})
-
-	humcommon.SetLogPrefix("NSS-HTTPS")
 }
 
 // Placeholder main() stub is neccessary for compile.

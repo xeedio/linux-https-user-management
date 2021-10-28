@@ -32,7 +32,7 @@ func initTLS() error {
 		tlsConfig.Certificates = []tls.Certificate{mainCert}
 		tlsConfig.BuildNameToCertificate()
 	} else {
-		LogInfo("TLS", "Unable to init client certificates: either cert or key missing")
+		logger.Info("Unable to init client certificates: either cert or key missing")
 	}
 
 	if AppConfig.TLS.CA != "" {

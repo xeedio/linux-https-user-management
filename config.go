@@ -1,8 +1,6 @@
 package humcommon
 
 import (
-	"fmt"
-	"log"
 	"os"
 
 	"gopkg.in/yaml.v2"
@@ -18,7 +16,6 @@ type Config struct {
 		Cert string
 	}
 	Debug     bool
-	Logger    string
 	URL       string
 	TokenFile string
 }
@@ -30,7 +27,7 @@ func NewConfig(configPath string) (*Config, error) {
 	// Open config file
 	file, err := os.Open(configPath)
 	if err != nil {
-		return nil, err
+		return config, err
 	}
 	defer file.Close()
 
@@ -39,16 +36,19 @@ func NewConfig(configPath string) (*Config, error) {
 
 	// Start YAML decoding from file
 	if err := d.Decode(&config); err != nil {
-		return nil, err
+		return config, err
 	}
 
 	return config, nil
 }
 
 var AppConfig *Config
+var ConfigError bool
 
 func init() {
 	var err error
+
+	initLogger()
 
 	configFilePath := os.Getenv("HTTPS_USER_MANAGEMENT_CONFIG")
 	if configFilePath == "" {
@@ -57,21 +57,21 @@ func init() {
 
 	AppConfig, err = NewConfig(configFilePath)
 	if err != nil {
-		log.Fatalln("Unable to load config. Error: ", err)
+		logger.Warnf("Unable to load config. Error: %v", err)
+		ConfigError = true
+		return
 	}
+
 	if AppConfig.TokenFile == "" {
 		AppConfig.TokenFile = defaultTokenFilePath
 	}
 
-	err = initLogger()
-	if err != nil {
-		log.Fatalln("Unable to init logger: ", err)
-	}
-
-	LogInfo("APP-CONFIG", fmt.Sprintf("%+v", AppConfig))
+	logger.Infof("AppConfig: %+v", *AppConfig)
 
 	err = initTLS()
 	if err != nil {
-		LogFatal("Unable to init tls", err)
+		ConfigError = true
+		logger.Warnf("Unable to init tls: %v", err)
+		return
 	}
 }

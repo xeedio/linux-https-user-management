@@ -28,7 +28,7 @@ type TokenUser struct {
 }
 
 func Authenticate(user, password string) (*TokenUser, error) {
-	LogDebug("API-AUTHENTICATE", fmt.Sprintf("Making request to %s", AppConfig.URL))
+	logger.Debugf("Making request to %s", AppConfig.URL)
 
 	authStruct := struct {
 		User     string `json:"username"`
@@ -51,11 +51,11 @@ func Authenticate(user, password string) (*TokenUser, error) {
 	}
 	defer resp.Body.Close()
 
-	LogDebug("API-AUTHENTICATE", fmt.Sprintf("Response: code=%d(%s),length=%d,content-type=%s", resp.StatusCode, resp.Status, resp.ContentLength, resp.Header.Get("Content-Type")))
+	logger.Debugf("Response: code=%d(%s),length=%d,content-type=%s", resp.StatusCode, resp.Status, resp.ContentLength, resp.Header.Get("Content-Type"))
 
 	if resp.StatusCode != 200 {
 		b, _ = ioutil.ReadAll(resp.Body)
-		LogInfo("API-AUTHENTICATE", fmt.Sprintf("Invalid response body: %s", b))
+		logger.Infof("Invalid response body: %s", b)
 		return nil, errors.New(resp.Status)
 	}
 
