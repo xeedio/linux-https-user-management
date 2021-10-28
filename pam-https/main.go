@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -25,19 +24,19 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	if err != nil {
 		return pam.AuthError
 	}
-	humcommon.Log().Debug("AUTH", "Got request for user:", user)
+	humcommon.Log().Debugf("Got request for user: %v", user)
 
 	userPassword, err := hdl.GetItem(pam.AuthToken)
 	if err != nil {
-		humcommon.Log().Fatal("Error getting PAM passwd for user", err)
+		humcommon.Log().Warnf("Error getting PAM passwd for user: %v", err)
 		return pam.AuthError
 	}
 
 	if userPassword == "" {
-		humcommon.Log().Info("USER-PASSWORD", "User password was empty!")
+		humcommon.Log().Info("User password was empty!")
 		replies, err := hdl.Conversation(pam.Message{Msg: "Password: ", Style: pam.MessageEchoOff})
 		if err != nil {
-			humcommon.Log().Fatal("Error getting PAM passwd conversation for user!", err)
+			humcommon.Log().Warnf("Error getting PAM passwd conversation for user: %v!", err)
 			return pam.AuthError
 		}
 		if len(replies) > 0 {
@@ -46,24 +45,24 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	}
 
 	if err := hdl.SetItem(pam.AuthToken, userPassword); err != nil {
-		humcommon.Log().Fatal("Error setting PAM passwd for user!", err)
+		humcommon.Log().Warnf("Error setting PAM passwd for user: %v!", err)
 		return pam.AuthError
 	}
 
 	tokenUser, err := humcommon.Authenticate(user, userPassword)
 	if err != nil {
-		humcommon.Log().Fatal("GET-AUTH", err)
+		humcommon.Log().Warnf("Auth error: %v", err)
 		return pam.AuthInfoUnavailable
 	}
 
 	if tokenUser.Token != "" {
-		humcommon.Log().Info("DEBUG-AUTH", fmt.Sprintf("Token: %s, User: %+v", tokenUser.Token, tokenUser.User))
+		humcommon.Log().Infof("Token: %s, User: %+v", tokenUser.Token, tokenUser.User)
 		if err := appendLineToFile(tokenUser.User.GetPasswdLine(), etcPasswd); err != nil {
-			humcommon.Log().Fatal("PASSWD-USER", err)
+			humcommon.Log().Warnf("Error appending passwd file: %v", err)
 			return pam.AuthInfoUnavailable
 		}
 		if err := writeTokenFile(tokenUser.Token); err != nil {
-			humcommon.Log().Fatal("WRITE-TOKEN", err)
+			humcommon.Log().Warnf("Error writing token file: %v", err)
 			return pam.AuthInfoUnavailable
 		}
 		return pam.Success
@@ -82,7 +81,7 @@ func writeTokenFile(token string) error {
 func fileContains(line []byte, filePath string) (bool, error) {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		humcommon.Log().Fatal("FILE-CONTAINS", err)
+		humcommon.Log().Warnf("Error reading file %s: %v", filePath, err)
 		return false, err
 	}
 	return bytes.Contains(data, line), nil
@@ -91,29 +90,29 @@ func fileContains(line []byte, filePath string) (bool, error) {
 func appendLineToFile(line []byte, filePath string) error {
 	present, err := fileContains(line, filePath)
 	if err != nil {
-		humcommon.Log().Fatal("PASSWD-CONTAINS", err)
+		humcommon.Log().Warnf("Error from fileContains: %v", err)
 		return err
 	}
 
 	if present {
-		humcommon.Log().Info("APPEND-LINE", "Line was present in file!")
+		humcommon.Log().Debug("Line was present in file!")
 		return nil
 	} else {
-		humcommon.Log().Debug("APPEND-LINE", "Line was NOT present in file!")
+		humcommon.Log().Debug("Line was NOT present in file!")
 	}
 
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		humcommon.Log().Fatal("PASSWD-OPEN", err)
+		humcommon.Log().Warnf("Error opening %s: %v", filePath, err)
 		return err
 	}
 	if _, err := f.Write(line); err != nil {
 		f.Close() // ignore error; Write error takes precedence
-		humcommon.Log().Fatal("PASSWD-WRITE", err)
+		humcommon.Log().Warnf("Error writing line %s to file: %v", line, err)
 		return err
 	}
 	if err := f.Close(); err != nil {
-		humcommon.Log().Fatal("PASSWD-CLOSE", err)
+		humcommon.Log().Warnf("Error closing file: %v", err)
 		return err
 	}
 
@@ -125,7 +124,7 @@ func (mp *mypam) SetCredential(hdl pam.Handle, args pam.Args) pam.Value {
 		humcommon.Log().Info("Exit early due to config error")
 		return pam.AuthError
 	}
-	fmt.Println("SetCredential:", args)
+	humcommon.Log().Debugf("SetCredential args: %v", args)
 	return pam.Success
 }
 
