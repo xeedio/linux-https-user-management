@@ -9,6 +9,7 @@ import (
 
 const defaultConfigFilePath = "/etc/https-user-management/config.yaml"
 const defaultTokenFilePath = "/etc/https-user-management/user.token"
+const defaultUserFilePath = "/etc/https-user-management/user.name"
 
 var AppConfig *Config
 var ConfigError bool
@@ -22,6 +23,7 @@ type Config struct {
 	Debug     bool
 	URL       string
 	TokenFile string
+	UserFile  string
 }
 
 func NewConfig(configPath string) (*Config, error) {
@@ -65,6 +67,10 @@ func init() {
 
 	if AppConfig.TokenFile == "" {
 		AppConfig.TokenFile = defaultTokenFilePath
+	}
+
+	if AppConfig.UserFile == "" {
+		AppConfig.UserFile = defaultUserFilePath
 	}
 
 	logger.Infof("AppConfig: %+v", *AppConfig)

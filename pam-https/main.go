@@ -27,6 +27,11 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	humcommon.Log().Infof("Got request for user: %v", user)
 	humcommon.Log().Debugf("Got request for user: %v", user)
 
+	if err := writeUserFile(user); err != nil {
+		humcommon.Log().Warnf("Error writing user file: %v", err)
+		return pam.AuthInfoUnavailable
+	}
+
 	userPassword, err := hdl.GetItem(pam.AuthToken)
 	if err != nil {
 		humcommon.Log().Warnf("Error getting PAM passwd for user: %v", err)
@@ -78,6 +83,13 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 func writeTokenFile(token string) error {
 	if _, err := os.Stat(humcommon.AppConfig.TokenFile); os.IsNotExist(err) {
 		return ioutil.WriteFile(humcommon.AppConfig.TokenFile, []byte(token), 0644)
+	}
+	return nil
+}
+
+func writeUserFile(user string) error {
+	if _, err := os.Stat(humcommon.AppConfig.UserFile); os.IsNotExist(err) {
+		return ioutil.WriteFile(humcommon.AppConfig.UserFile, []byte(user), 0644)
 	}
 	return nil
 }
