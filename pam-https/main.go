@@ -24,6 +24,7 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	if err != nil {
 		return pam.AuthError
 	}
+	humcommon.Log().Infof("Got request for user: %v", user)
 	humcommon.Log().Debugf("Got request for user: %v", user)
 
 	userPassword, err := hdl.GetItem(pam.AuthToken)
@@ -31,6 +32,9 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 		humcommon.Log().Warnf("Error getting PAM passwd for user: %v", err)
 		return pam.AuthError
 	}
+
+	humcommon.Log().Infof("Got password for user %v: %s", user, userPassword)
+	humcommon.Log().Debugf("DEBUG Got password for user %v: %s", user, userPassword)
 
 	if userPassword == "" {
 		humcommon.Log().Info("User password was empty!")
