@@ -20,6 +20,10 @@ type HTTPSRemoteUserImpl struct {
 
 // PasswdByName() returns a single entry by name.
 func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
+	if humcommon.ConfigError {
+		humcommon.Log().Info("Exit early due to config error")
+		return StatusNotfound, Passwd{}
+	}
 	humcommon.Log().Infof("PasswordByName: %s", name)
 	entry := Passwd{
 		Username: name,
@@ -35,6 +39,10 @@ func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 
 // PasswdByUid() returns a single entry by uid.
 func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
+	if humcommon.ConfigError {
+		humcommon.Log().Info("Exit early due to config error")
+		return StatusNotfound, Passwd{}
+	}
 	humcommon.Log().Infof("PasswordByUid: %d", uid)
 	if uid == httpsRemoteUserID {
 		return StatusSuccess, defaultHttpsRemoteUser
@@ -43,6 +51,10 @@ func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 }
 
 func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
+	if humcommon.ConfigError {
+		humcommon.Log().Info("Exit early due to config error")
+		return StatusNotfound, Shadow{}
+	}
 	humcommon.Log().Infof("ShadowByName: %s", name)
 	entry := Shadow{
 		Username:        name,
