@@ -3,11 +3,15 @@ package humcommon
 import (
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
 const defaultConfigFilePath = "/etc/https-user-management/config.yaml"
 const defaultTokenFilePath = "/etc/https-user-management/user.token"
+
+var AppConfig *Config
+var ConfigError bool
 
 type Config struct {
 	TLS struct {
@@ -42,9 +46,6 @@ func NewConfig(configPath string) (*Config, error) {
 	return config, nil
 }
 
-var AppConfig *Config
-var ConfigError bool
-
 func init() {
 	var err error
 
@@ -67,6 +68,10 @@ func init() {
 	}
 
 	logger.Infof("AppConfig: %+v", *AppConfig)
+
+	if AppConfig.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 
 	err = initTLS()
 	if err != nil {

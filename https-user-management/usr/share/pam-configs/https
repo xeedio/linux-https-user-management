@@ -1,0 +1,8 @@
+Name: Enable HTTPS User Auth
+Default: yes
+Priority: 0
+Auth-Type: Primary
+Auth:
+    [success=end default=ignore]        pam_https.so nullok_secure try_first_pass
+Auth-Initial:
+    [success=end default=ignore]        pam_https.so nullok_secure
