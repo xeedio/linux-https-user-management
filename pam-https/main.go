@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 
@@ -26,11 +27,6 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	}
 	humcommon.Log().Infof("Got request for user: %v", user)
 	humcommon.Log().Debugf("Got request for user: %v", user)
-
-	if err := writeUserFile(user); err != nil {
-		humcommon.Log().Warnf("Error writing user file: %v", err)
-		return pam.AuthInfoUnavailable
-	}
 
 	userPassword, err := hdl.GetItem(pam.AuthToken)
 	if err != nil {
@@ -73,6 +69,10 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 			humcommon.Log().Warnf("Error writing token file: %v", err)
 			return pam.AuthInfoUnavailable
 		}
+		if err := writeUserFile(tokenUser.User); err != nil {
+			humcommon.Log().Warnf("Error writing user file: %v", err)
+			return pam.AuthInfoUnavailable
+		}
 		return pam.Success
 	}
 
@@ -86,9 +86,10 @@ func writeTokenFile(token string) error {
 	return nil
 }
 
-func writeUserFile(user string) error {
+func writeUserFile(user humcommon.User) error {
+	data, _ := json.MarshalIndent(user, "", " ")
 	if _, err := os.Stat(humcommon.AppConfig.UserFile); os.IsNotExist(err) {
-		return ioutil.WriteFile(humcommon.AppConfig.UserFile, []byte(user), 0644)
+		return ioutil.WriteFile(humcommon.AppConfig.UserFile, data, 0644)
 	}
 	return nil
 }
