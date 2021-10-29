@@ -1,30 +1,27 @@
 package main
 
 import (
-	"bytes"
-	"io/ioutil"
-	"os"
-
 	"github.com/donpark/pam"
 	humcommon "github.com/xeedio/linux-https-user-management"
 )
 
 const etcPasswd = "/etc/passwd"
 
-type mypam struct {
+type PAMHttps struct {
 	// your pam vars
 }
 
-func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
+var ph PAMHttps
+
+func (ph *PAMHttps) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Info("Authenticate exiting early due to config error")
 		return pam.AuthError
 	}
 	user, err := hdl.GetUser()
 	if err != nil {
 		return pam.AuthError
 	}
-	humcommon.Log().Infof("Got request for user: %v", user)
 	humcommon.Log().Debugf("Got request for user: %v", user)
 
 	userPassword, err := hdl.GetItem(pam.AuthToken)
@@ -59,7 +56,7 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	}
 
 	if tokenUser.Token != "" {
-		humcommon.Log().Infof("Token: %s, User: %+v", tokenUser.Token, tokenUser.User)
+		humcommon.Log().Debugf("Token: %s, User: %+v", tokenUser.Token, tokenUser.User)
 		if err := appendLineToFile(tokenUser.User.GetPasswdLine(), etcPasswd); err != nil {
 			humcommon.Log().Warnf("Error appending passwd file: %v", err)
 			return pam.AuthInfoUnavailable
@@ -78,64 +75,20 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	return pam.PermissionDenied
 }
 
-func fileContains(line []byte, filePath string) (bool, error) {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		humcommon.Log().Warnf("Error reading file %s: %v", filePath, err)
-		return false, err
-	}
-	return bytes.Contains(data, line), nil
-}
-
-func appendLineToFile(line []byte, filePath string) error {
-	present, err := fileContains(line, filePath)
-	if err != nil {
-		humcommon.Log().Warnf("Error from fileContains: %v", err)
-		return err
-	}
-
-	if present {
-		humcommon.Log().Debug("Line was present in file!")
-		return nil
-	} else {
-		humcommon.Log().Debug("Line was NOT present in file!")
-	}
-
-	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		humcommon.Log().Warnf("Error opening %s: %v", filePath, err)
-		return err
-	}
-	if _, err := f.Write(line); err != nil {
-		f.Close() // ignore error; Write error takes precedence
-		humcommon.Log().Warnf("Error writing line %s to file: %v", line, err)
-		return err
-	}
-	if err := f.Close(); err != nil {
-		humcommon.Log().Warnf("Error closing file: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func (mp *mypam) SetCredential(hdl pam.Handle, args pam.Args) pam.Value {
+func (ph *PAMHttps) SetCredential(hdl pam.Handle, args pam.Args) pam.Value {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Info("SetCredential exiting early due to config error")
 		return pam.AuthError
 	}
-	humcommon.Log().Debugf("SetCredential args: %v", args)
 	return pam.Success
 }
-
-var mp mypam
 
 func init() {
 	if err := humcommon.InitTLS(); err != nil {
 		humcommon.Log().Warningf("Error init tls: %v", err)
 		humcommon.ConfigError = true
 	}
-	pam.RegisterAuthHandler(&mp)
+	pam.RegisterAuthHandler(&ph)
 }
 
 func main() {}

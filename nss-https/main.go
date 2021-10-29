@@ -12,13 +12,33 @@ import (
 	humcommon "github.com/xeedio/linux-https-user-management"
 )
 
+// Structs populated on init
 var validGroupNames []string
 var groupsById map[uint]string
 var groupsByName map[string]uint
 
+// Singleton user
+var user *humcommon.User
+
 // We're creating a struct that implements HTTPSRemoteUserImpl stub methods.
 type HTTPSRemoteUserImpl struct {
 	LIBNSS
+}
+
+func loadUser() error {
+	if user != nil {
+		return nil
+	}
+
+	tmpUser := &humcommon.User{}
+	if err := tmpUser.ReadUserFile(); err != nil {
+		return err
+	}
+
+	// Set global user to temp user
+	user = tmpUser
+
+	return nil
 }
 
 // PasswdByName() returns a single entry by name.
@@ -29,8 +49,7 @@ func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 	}
 
 	humcommon.Log().Debugf("PasswordByName Start: %s", name)
-	user := &humcommon.User{}
-	if err := user.ReadUserFile(); err != nil {
+	if err := loadUser(); err != nil {
 		humcommon.Log().Infof("PasswdByName Can't get user info: %v", err)
 		return StatusNotfound, Passwd{}
 	}
@@ -59,8 +78,7 @@ func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 	}
 
 	humcommon.Log().Debugf("PasswdByUid Start: %d", uid)
-	user := &humcommon.User{}
-	if err := user.ReadUserFile(); err != nil {
+	if err := loadUser(); err != nil {
 		humcommon.Log().Infof("PasswdByUid Can't get user info: %v", err)
 		return StatusNotfound, Passwd{}
 	}
@@ -88,8 +106,7 @@ func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
 	}
 	humcommon.Log().Infof("ShadowByName Start: %s", name)
 
-	user := &humcommon.User{}
-	if err := user.ReadUserFile(); err != nil {
+	if err := loadUser(); err != nil {
 		humcommon.Log().Infof("ShadowByName Can't get user info: %v", err)
 		return StatusNotfound, Shadow{}
 	}
@@ -119,8 +136,7 @@ func (self HTTPSRemoteUserImpl) GroupAll() (Status, []Group) {
 		return StatusNotfound, []Group{}
 	}
 
-	user := &humcommon.User{}
-	if err := user.ReadUserFile(); err != nil {
+	if err := loadUser(); err != nil {
 		humcommon.Log().Infof("Can't get user info: %v", err)
 		return StatusNotfound, []Group{}
 	}
@@ -151,8 +167,7 @@ func (self HTTPSRemoteUserImpl) GroupByName(name string) (Status, Group) {
 
 	humcommon.Log().Debugf("GroupByName Start: %s", name)
 
-	user := &humcommon.User{}
-	if err := user.ReadUserFile(); err != nil {
+	if err := loadUser(); err != nil {
 		humcommon.Log().Infof("GroupByName Can't get user info: %v", err)
 		return StatusNotfound, Group{}
 	}
@@ -178,8 +193,7 @@ func (self HTTPSRemoteUserImpl) GroupByGid(gid uint) (Status, Group) {
 		return StatusNotfound, Group{}
 	}
 
-	user := &humcommon.User{}
-	if err := user.ReadUserFile(); err != nil {
+	if err := loadUser(); err != nil {
 		humcommon.Log().Infof("Can't get user info: %v", err)
 		return StatusNotfound, Group{}
 	}
@@ -241,13 +255,17 @@ func isValidGroup(groupName string) bool {
 }
 
 func init() {
-	validGroupNames = append(validGroupNames, "adm", "cdrom", "sudo", "plugdev", "lpadmin")
+	validGroupNames = append(validGroupNames, "adm", "cdrom", "sudo", "plugdev", "lpadmin", "users")
 
 	groupsById = make(map[uint]string)
 	groupsByName = make(map[string]uint)
 
 	if err := parseEtcGroup(); err != nil {
 		humcommon.Log().Warnf("Unable to parse etc group: %v", err)
+	}
+
+	if err := loadUser(); err != nil {
+		humcommon.Log().Warnf("Init can't yet load user json: %v", err)
 	}
 
 	// We set our implementation to "HTTPSRemoteUserImpl", so that go-libnss will use the methods we create

@@ -11,6 +11,6 @@ import (
 func TestAuthenticate(t *testing.T) {
 	args := pam.Args{}
 	hdl := pam.Handle{}
-	val := mp.Authenticate(hdl, args)
+	val := ph.Authenticate(hdl, args)
 	assert.Equal(t, pam.AuthError, val, "Expected AuthError")
 }
