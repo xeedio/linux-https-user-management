@@ -38,8 +38,7 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 		return pam.AuthError
 	}
 
-	humcommon.Log().Infof("Got password for user %v: %s", user, userPassword)
-	humcommon.Log().Debugf("DEBUG Got password for user %v: %s", user, userPassword)
+	humcommon.Log().Debugf("Got password for user %v", user)
 
 	if userPassword == "" {
 		humcommon.Log().Info("User password was empty!")

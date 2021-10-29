@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"time"
 )
 
 const userID = 1337
@@ -27,6 +29,41 @@ type TokenUser struct {
 	User  User   `json:"user"`
 }
 
+var backoffSchedule = []time.Duration{
+	1 * time.Second,
+	3 * time.Second,
+	10 * time.Second,
+}
+
+func postAuthData(b []byte) (*http.Response, error) {
+	buf := bytes.NewBuffer(b)
+	client := GetHTTPClient()
+	return client.Post(AppConfig.URL, "application/json", buf)
+}
+
+func postAuthDataWithRetries(b []byte) (*http.Response, error) {
+	var err error
+	var resp *http.Response
+
+	for _, backoff := range backoffSchedule {
+		resp, err = postAuthData(b)
+		if err == nil {
+			break
+		}
+
+		logger.Infof("Request error: %+v", err)
+		logger.Infof("Retrying in %v", backoff)
+		time.Sleep(backoff)
+	}
+
+	// All retries failed
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func Authenticate(user, password string) (*TokenUser, error) {
 	logger.Debugf("Making request to %s", AppConfig.URL)
 
@@ -42,16 +79,14 @@ func Authenticate(user, password string) (*TokenUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(b)
 
-	client := GetHTTPClient()
-	resp, err := client.Post(AppConfig.URL, "application/json", buf)
+	resp, err := postAuthDataWithRetries(b)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	logger.Debugf("Response: code=%d(%s),length=%d,content-type=%s", resp.StatusCode, resp.Status, resp.ContentLength, resp.Header.Get("Content-Type"))
+	logger.Debugf("Response: code=%d(%s), length=%d, content-type=%s", resp.StatusCode, resp.Status, resp.ContentLength, resp.Header.Get("Content-Type"))
 
 	if resp.StatusCode != 200 {
 		b, _ = ioutil.ReadAll(resp.Body)
