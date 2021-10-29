@@ -78,11 +78,4 @@ func init() {
 	if AppConfig.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}
-
-	err = initTLS()
-	if err != nil {
-		ConfigError = true
-		logger.Warnf("Unable to init tls: %v", err)
-		return
-	}
 }

@@ -17,7 +17,11 @@ func GetHTTPClient() *http.Client {
 	}
 }
 
-func initTLS() error {
+func InitTLS() error {
+	if transport != nil {
+		return nil
+	}
+
 	tlsConfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}

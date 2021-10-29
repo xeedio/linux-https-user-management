@@ -131,6 +131,10 @@ func (mp *mypam) SetCredential(hdl pam.Handle, args pam.Args) pam.Value {
 var mp mypam
 
 func init() {
+	if err := humcommon.InitTLS(); err != nil {
+		humcommon.Log().Warningf("Error init tls: %v", err)
+		humcommon.ConfigError = true
+	}
 	pam.RegisterAuthHandler(&mp)
 }
 

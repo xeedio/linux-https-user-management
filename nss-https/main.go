@@ -28,14 +28,20 @@ func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 		return StatusNotfound, Passwd{}
 	}
 
-	humcommon.Log().Infof("PasswordByName: %s", name)
+	humcommon.Log().Debugf("PasswordByName Start: %s", name)
 	user := &humcommon.User{}
 	if err := user.ReadUserFile(); err != nil {
-		humcommon.Log().Infof("Can't get user info: %v", err)
+		humcommon.Log().Infof("PasswdByName Can't get user info: %v", err)
 		return StatusNotfound, Passwd{}
 	}
 
-	entry := Passwd{
+	if name != user.Username {
+		humcommon.Log().Infof("PasswdByName Wrong user: %s", name)
+		return StatusNotfound, Passwd{}
+	}
+
+	humcommon.Log().Debugf("PasswordByName Success: %s", name)
+	return StatusSuccess, Passwd{
 		Username: user.Username,
 		Password: "x",
 		UID:      user.UID,
@@ -43,28 +49,29 @@ func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 		Dir:      fmt.Sprintf("/home/%s", user.Username),
 		Shell:    "/bin/bash",
 	}
-	return StatusSuccess, entry
 }
 
 // PasswdByUid() returns a single entry by uid.
 func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Info("PasswdByUid Exit early due to config error")
 		return StatusNotfound, Passwd{}
 	}
 
-	humcommon.Log().Infof("PasswordByUid: %d", uid)
+	humcommon.Log().Debugf("PasswdByUid Start: %d", uid)
 	user := &humcommon.User{}
 	if err := user.ReadUserFile(); err != nil {
-		humcommon.Log().Infof("Can't get user info: %v", err)
+		humcommon.Log().Infof("PasswdByUid Can't get user info: %v", err)
 		return StatusNotfound, Passwd{}
 	}
 
 	if uid != user.UID {
+		humcommon.Log().Infof("PasswdByUid Wrong uid: %d", uid)
 		return StatusNotfound, Passwd{}
 	}
 
-	entry := Passwd{
+	humcommon.Log().Debugf("PasswordByUid Success: %d", uid)
+	return StatusSuccess, Passwd{
 		Username: user.Username,
 		Password: "x",
 		UID:      user.UID,
@@ -72,7 +79,6 @@ func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 		Dir:      fmt.Sprintf("/home/%s", user.Username),
 		Shell:    "/bin/bash",
 	}
-	return StatusSuccess, entry
 }
 
 func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
@@ -80,8 +86,21 @@ func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
 		humcommon.Log().Info("Exit early due to config error")
 		return StatusNotfound, Shadow{}
 	}
-	humcommon.Log().Infof("ShadowByName: %s", name)
-	entry := Shadow{
+	humcommon.Log().Infof("ShadowByName Start: %s", name)
+
+	user := &humcommon.User{}
+	if err := user.ReadUserFile(); err != nil {
+		humcommon.Log().Infof("ShadowByName Can't get user info: %v", err)
+		return StatusNotfound, Shadow{}
+	}
+
+	if name != user.Username {
+		humcommon.Log().Infof("ShadowByName Wrong user: %s", name)
+		return StatusNotfound, Shadow{}
+	}
+
+	humcommon.Log().Debugf("ShadowByName Success: %s", name)
+	return StatusSuccess, Shadow{
 		Username:        name,
 		Password:        "!",
 		LastChange:      18000,
@@ -92,7 +111,6 @@ func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
 		ExpirationDate:  -1,
 		Reserved:        -1,
 	}
-	return StatusSuccess, entry
 }
 
 func (self HTTPSRemoteUserImpl) GroupAll() (Status, []Group) {
@@ -107,6 +125,8 @@ func (self HTTPSRemoteUserImpl) GroupAll() (Status, []Group) {
 		return StatusNotfound, []Group{}
 	}
 
+	humcommon.Log().Debugf("GroupAll Start")
+
 	groupList := make([]Group, 0)
 	for groupName, groupId := range groupsByName {
 		groupList = append(groupList, Group{
@@ -118,6 +138,8 @@ func (self HTTPSRemoteUserImpl) GroupAll() (Status, []Group) {
 		)
 	}
 
+	humcommon.Log().Debugf("GroupAll Success")
+
 	return StatusSuccess, groupList
 }
 
@@ -127,15 +149,20 @@ func (self HTTPSRemoteUserImpl) GroupByName(name string) (Status, Group) {
 		return StatusNotfound, Group{}
 	}
 
+	humcommon.Log().Debugf("GroupByName Start: %s", name)
+
 	user := &humcommon.User{}
 	if err := user.ReadUserFile(); err != nil {
-		humcommon.Log().Infof("Can't get user info: %v", err)
+		humcommon.Log().Infof("GroupByName Can't get user info: %v", err)
 		return StatusNotfound, Group{}
 	}
 
 	if !isValidGroup(name) {
+		humcommon.Log().Debugf("GroupByName Invalid: %s", name)
 		return StatusNotfound, Group{}
 	}
+
+	humcommon.Log().Debugf("GroupByName Success: %s", name)
 
 	return StatusSuccess, Group{
 		Groupname: name,
@@ -157,9 +184,14 @@ func (self HTTPSRemoteUserImpl) GroupByGid(gid uint) (Status, Group) {
 		return StatusNotfound, Group{}
 	}
 
+	humcommon.Log().Debugf("GroupByGid: %d", gid)
+
 	if _, ok := groupsById[gid]; !ok {
+		humcommon.Log().Debugf("GroupByGid Invalid: %d", gid)
 		return StatusNotfound, Group{}
 	}
+
+	humcommon.Log().Debugf("GroupByGid Success: %d", gid)
 
 	return StatusSuccess, Group{
 		Groupname: groupsById[gid],
