@@ -14,7 +14,7 @@ func TestPasswdByName(t *testing.T) {
 }
 
 func TestPasswdByUidBad(t *testing.T) {
-	status, _ := HTTPSRemoteUserImpl{}.PasswdByUid(httpsRemoteUserID)
+	status, _ := HTTPSRemoteUserImpl{}.PasswdByUid(2001)
 	assert.Equal(t, nss.Status(0), status, "Expected success")
 }
 
@@ -26,4 +26,12 @@ func TestPasswdByUidGood(t *testing.T) {
 func TestShadowByName(t *testing.T) {
 	status, _ := HTTPSRemoteUserImpl{}.ShadowByName("user0")
 	assert.Equal(t, nss.Status(0), status, "Expected success")
+}
+
+func TestParseEtcGroup(t *testing.T) {
+	if err := parseEtcGroup(); err != nil {
+		t.Errorf("Error parsing etc group: %v", err)
+	}
+	t.Logf("GroupsById: %+v", groupsById)
+	t.Logf("GroupsByName: %+v", groupsByName)
 }

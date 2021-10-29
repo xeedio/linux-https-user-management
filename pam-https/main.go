@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"os"
 
@@ -65,11 +64,11 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 			humcommon.Log().Warnf("Error appending passwd file: %v", err)
 			return pam.AuthInfoUnavailable
 		}
-		if err := writeTokenFile(tokenUser.Token); err != nil {
+		if err := tokenUser.WriteTokenFile(); err != nil {
 			humcommon.Log().Warnf("Error writing token file: %v", err)
 			return pam.AuthInfoUnavailable
 		}
-		if err := writeUserFile(tokenUser.User); err != nil {
+		if err := tokenUser.User.WriteUserFile(); err != nil {
 			humcommon.Log().Warnf("Error writing user file: %v", err)
 			return pam.AuthInfoUnavailable
 		}
@@ -77,21 +76,6 @@ func (mp *mypam) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	}
 
 	return pam.PermissionDenied
-}
-
-func writeTokenFile(token string) error {
-	if _, err := os.Stat(humcommon.AppConfig.TokenFile); os.IsNotExist(err) {
-		return ioutil.WriteFile(humcommon.AppConfig.TokenFile, []byte(token), 0644)
-	}
-	return nil
-}
-
-func writeUserFile(user humcommon.User) error {
-	data, _ := json.MarshalIndent(user, "", " ")
-	if _, err := os.Stat(humcommon.AppConfig.UserFile); os.IsNotExist(err) {
-		return ioutil.WriteFile(humcommon.AppConfig.UserFile, data, 0644)
-	}
-	return nil
 }
 
 func fileContains(line []byte, filePath string) (bool, error) {
