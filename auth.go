@@ -81,8 +81,7 @@ func postAuthDataWithRetries(b []byte) (*http.Response, error) {
 			break
 		}
 
-		logger.Infof("Request error: %+v", err)
-		logger.Infof("Retrying in %v", backoff)
+		logger.Infof("Request error: %+v. Retrying in %v", err, backoff)
 		time.Sleep(backoff)
 	}
 
@@ -120,7 +119,7 @@ func Authenticate(user, password string) (*TokenUser, error) {
 
 	if resp.StatusCode != 200 {
 		b, _ = ioutil.ReadAll(resp.Body)
-		logger.Infof("Invalid response body: %s", b)
+		logger.Warnf("Invalid response body: %s", b)
 		return nil, errors.New(resp.Status)
 	}
 

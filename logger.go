@@ -17,9 +17,8 @@ var logger *logrus.Logger
 
 func initLogger() {
 	logger = logrus.New()
-	hook, err := lSyslog.NewSyslogHook("", "", syslog.LOG_INFO, "")
-	logger.SetReportCaller(true)
-	logger.SetLevel(logrus.WarnLevel)
+	logger.SetLevel(logrus.InfoLevel)
+	hook, err := lSyslog.NewSyslogHook("", "", syslog.LOG_INFO|syslog.LOG_DAEMON, "")
 
 	if err == nil {
 		logger.Hooks.Add(hook)

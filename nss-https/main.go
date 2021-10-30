@@ -44,18 +44,18 @@ func loadUser() error {
 // PasswdByName() returns a single entry by name.
 func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Debug("Exit early due to config error")
 		return StatusNotfound, Passwd{}
 	}
 
 	humcommon.Log().Debugf("PasswordByName Start: %s", name)
 	if err := loadUser(); err != nil {
-		humcommon.Log().Infof("PasswdByName Can't get user info: %v", err)
+		humcommon.Log().Debugf("PasswdByName Can't get user info: %v", err)
 		return StatusNotfound, Passwd{}
 	}
 
 	if name != user.Username {
-		humcommon.Log().Infof("PasswdByName Wrong user: %s", name)
+		humcommon.Log().Debugf("PasswdByName Wrong user: %s", name)
 		return StatusNotfound, Passwd{}
 	}
 
@@ -73,18 +73,18 @@ func (self HTTPSRemoteUserImpl) PasswdByName(name string) (Status, Passwd) {
 // PasswdByUid() returns a single entry by uid.
 func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("PasswdByUid Exit early due to config error")
+		humcommon.Log().Debug("PasswdByUid Exit early due to config error")
 		return StatusNotfound, Passwd{}
 	}
 
 	humcommon.Log().Debugf("PasswdByUid Start: %d", uid)
 	if err := loadUser(); err != nil {
-		humcommon.Log().Infof("PasswdByUid Can't get user info: %v", err)
+		humcommon.Log().Debugf("PasswdByUid Can't get user info: %v", err)
 		return StatusNotfound, Passwd{}
 	}
 
 	if uid != user.UID {
-		humcommon.Log().Infof("PasswdByUid Wrong uid: %d", uid)
+		humcommon.Log().Debugf("PasswdByUid Wrong uid: %d", uid)
 		return StatusNotfound, Passwd{}
 	}
 
@@ -101,18 +101,18 @@ func (self HTTPSRemoteUserImpl) PasswdByUid(uid uint) (Status, Passwd) {
 
 func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Debug("Exit early due to config error")
 		return StatusNotfound, Shadow{}
 	}
-	humcommon.Log().Infof("ShadowByName Start: %s", name)
+	humcommon.Log().Debugf("ShadowByName Start: %s", name)
 
 	if err := loadUser(); err != nil {
-		humcommon.Log().Infof("ShadowByName Can't get user info: %v", err)
+		humcommon.Log().Debugf("ShadowByName Can't get user info: %v", err)
 		return StatusNotfound, Shadow{}
 	}
 
 	if name != user.Username {
-		humcommon.Log().Infof("ShadowByName Wrong user: %s", name)
+		humcommon.Log().Debugf("ShadowByName Wrong user: %s", name)
 		return StatusNotfound, Shadow{}
 	}
 
@@ -132,12 +132,12 @@ func (self HTTPSRemoteUserImpl) ShadowByName(name string) (Status, Shadow) {
 
 func (self HTTPSRemoteUserImpl) GroupAll() (Status, []Group) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Debug("Exit early due to config error")
 		return StatusNotfound, []Group{}
 	}
 
 	if err := loadUser(); err != nil {
-		humcommon.Log().Infof("Can't get user info: %v", err)
+		humcommon.Log().Debugf("Can't get user info: %v", err)
 		return StatusNotfound, []Group{}
 	}
 
@@ -161,14 +161,14 @@ func (self HTTPSRemoteUserImpl) GroupAll() (Status, []Group) {
 
 func (self HTTPSRemoteUserImpl) GroupByName(name string) (Status, Group) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Debug("Exit early due to config error")
 		return StatusNotfound, Group{}
 	}
 
 	humcommon.Log().Debugf("GroupByName Start: %s", name)
 
 	if err := loadUser(); err != nil {
-		humcommon.Log().Infof("GroupByName Can't get user info: %v", err)
+		humcommon.Log().Debugf("GroupByName Can't get user info: %v", err)
 		return StatusNotfound, Group{}
 	}
 
@@ -189,12 +189,12 @@ func (self HTTPSRemoteUserImpl) GroupByName(name string) (Status, Group) {
 
 func (self HTTPSRemoteUserImpl) GroupByGid(gid uint) (Status, Group) {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Exit early due to config error")
+		humcommon.Log().Debug("Exit early due to config error")
 		return StatusNotfound, Group{}
 	}
 
 	if err := loadUser(); err != nil {
-		humcommon.Log().Infof("Can't get user info: %v", err)
+		humcommon.Log().Debugf("Can't get user info: %v", err)
 		return StatusNotfound, Group{}
 	}
 
@@ -265,7 +265,7 @@ func init() {
 	}
 
 	if err := loadUser(); err != nil {
-		humcommon.Log().Warnf("Init can't yet load user json: %v", err)
+		humcommon.Log().Debugf("Init can't yet load user json: %v", err)
 	}
 
 	// We set our implementation to "HTTPSRemoteUserImpl", so that go-libnss will use the methods we create

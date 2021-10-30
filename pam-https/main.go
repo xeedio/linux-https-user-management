@@ -15,7 +15,7 @@ var ph PAMHttps
 
 func (ph *PAMHttps) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("Authenticate exiting early due to config error")
+		humcommon.Log().Debug("Authenticate exiting early due to config error")
 		return pam.AuthError
 	}
 	user, err := hdl.GetUser()
@@ -33,7 +33,7 @@ func (ph *PAMHttps) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 	humcommon.Log().Debugf("Got password for user %v", user)
 
 	if userPassword == "" {
-		humcommon.Log().Info("User password was empty!")
+		humcommon.Log().Warn("User password was empty!")
 		replies, err := hdl.Conversation(pam.Message{Msg: "Password: ", Style: pam.MessageEchoOff})
 		if err != nil {
 			humcommon.Log().Warnf("Error getting PAM passwd conversation for user: %v!", err)
@@ -77,7 +77,7 @@ func (ph *PAMHttps) Authenticate(hdl pam.Handle, args pam.Args) pam.Value {
 
 func (ph *PAMHttps) SetCredential(hdl pam.Handle, args pam.Args) pam.Value {
 	if humcommon.ConfigError {
-		humcommon.Log().Info("SetCredential exiting early due to config error")
+		humcommon.Log().Debug("SetCredential exiting early due to config error")
 		return pam.AuthError
 	}
 	return pam.Success

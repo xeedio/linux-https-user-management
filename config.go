@@ -60,7 +60,7 @@ func init() {
 
 	AppConfig, err = NewConfig(configFilePath)
 	if err != nil {
-		logger.Warnf("Unable to load config. Error: %v", err)
+		logger.Debugf("Unable to load config. Error: %v", err)
 		ConfigError = true
 		return
 	}
@@ -73,9 +73,10 @@ func init() {
 		AppConfig.UserFile = defaultUserFilePath
 	}
 
-	logger.Infof("AppConfig: %+v", *AppConfig)
+	logger.Debugf("AppConfig: %+v", *AppConfig)
 
 	if AppConfig.Debug {
 		logger.SetLevel(logrus.DebugLevel)
+		logger.SetReportCaller(true)
 	}
 }
